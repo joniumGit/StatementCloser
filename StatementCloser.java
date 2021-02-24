@@ -257,7 +257,13 @@ class StatementCloser {
             var t = tryExtractor.apply(match.substring(m.start(), min).replaceAll("(?m)^\\s*//.*\\s*$", ""));
             log("Extract successful");
             log(String.format("try ( %s ) { %s }%n", t, c));
-            return String.format("try ( %s ) { %s } %s", t, c, match.substring(contentStart + c.length()));
+            var name =  m.group(NAME_GROUP);
+            var np = Pattern.compile("(\\s+|(?<=[(+,!=]))" + name + "(\\s+|(?=[=.),]))");
+            var nn = "generatedVariable" + new Random().nextInt(Integer.MAX_VALUE);
+            t = np.matcher(t).replaceFirst("$1" + nn + "$2");
+            var rest = match.substring(contentStart + c.length());
+            c = np.matcher(c).replaceAll("$1" + nn + "$2");
+            return String.format("try ( %s ) { %s } %s", t, c, rest);
         } catch (IllegalStateException e) {
             throw e;
         } catch (RuntimeException failed) {
@@ -276,8 +282,6 @@ class StatementCloser {
 
     public static void main(String[] args) throws Exception {
         STORE.PATH = args[0];
-        info(STORE.PATH);
-        done();
         var count = new AtomicInteger(0);
         read().parallelStream().forEach(f -> {
             try {
