@@ -23,6 +23,8 @@ class StatementCloser {
         static Pattern filePattern = Pattern.compile(".*" + FILE_TYPE);
     }
 
+    static AtomicInteger psCounter = new AtomicInteger(0);
+
     static boolean verbose = false;
 
     static class Logger extends OutputStream {
@@ -259,7 +261,7 @@ class StatementCloser {
             log(String.format("try ( %s ) { %s }%n", t, c));
             var name =  m.group(NAME_GROUP);
             var np = Pattern.compile("(\\s+|(?<=[(+,!=]))" + name + "(\\s+|(?=[=.),]))");
-            var nn = "generatedVariable" + new Random().nextInt(Integer.MAX_VALUE);
+            var nn = "generatedVariable" + psCounter.incrementAndGet();
             t = np.matcher(t).replaceFirst("$1" + nn + "$2");
             var rest = match.substring(contentStart + c.length());
             c = np.matcher(c).replaceAll("$1" + nn + "$2");
